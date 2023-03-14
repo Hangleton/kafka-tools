@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package tools;
+package kafka.tools;
 
 import com.google.gson.Gson;
 import org.apache.kafka.common.TopicPartition;

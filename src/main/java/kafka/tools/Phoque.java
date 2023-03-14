@@ -1,4 +1,4 @@
-package tools;
+package kafka.tools;
 
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClient;
