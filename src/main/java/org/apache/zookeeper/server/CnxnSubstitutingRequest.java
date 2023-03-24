@@ -7,10 +7,10 @@ import org.apache.zookeeper.metrics.SummarySet;
 import org.apache.zookeeper.txn.TxnDigest;
 import org.apache.zookeeper.txn.TxnHeader;
 
-public class CnxnSubstitutinggRequest extends Request {
+public class CnxnSubstitutingRequest extends Request {
     private final Request delegate;
 
-    public CnxnSubstitutinggRequest(ServerCnxn cnxn, Request delegate) {
+    public CnxnSubstitutingRequest(ServerCnxn cnxn, Request delegate) {
         super(cnxn,
             delegate.sessionId,
             delegate.cxid,

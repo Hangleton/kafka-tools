@@ -43,7 +43,7 @@ public class ZookeeperTxnLogReader {
 
     public static void main(String[] args) {
         try {
-            FileInputStream fis = new FileInputStream("/Users/duprie/Downloads/log.1300025b10");
+            FileInputStream fis = new FileInputStream("");
             BinaryInputArchive logStream = BinaryInputArchive.getArchive(fis);
             FileHeader fhdr = new FileHeader();
             fhdr.deserialize(logStream, "fileheader");

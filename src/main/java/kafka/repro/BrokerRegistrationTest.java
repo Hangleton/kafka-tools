@@ -48,7 +48,6 @@ public class BrokerRegistrationTest {
 
         public void run() {
             ZooKeeperServer zookeeper = null;
-            AdminServer adminServer = null;
             ServerCnxnFactory cnxnFactory = null;
 
             try {
@@ -76,9 +75,6 @@ public class BrokerRegistrationTest {
                     }
                 };
 
-                adminServer = AdminServerFactory.createAdminServer();
-                adminServer.setZooKeeperServer(zookeeper);
-                adminServer.start();
 
                 cnxnFactory = ServerCnxnFactory.createFactory();
                 cnxnFactory.configure(
@@ -91,18 +87,15 @@ public class BrokerRegistrationTest {
                 zookeeperStartLatch.countDown();
                 zookeeperStopLatch.await();
 
-
             } catch (Exception e) {
                 e.printStackTrace();
 
             } finally {
                 try {
-                    if (adminServer != null)
-                        adminServer.shutdown();
                     if (cnxnFactory != null)
                         cnxnFactory.shutdown();
                     if (zookeeper != null)
-                        zookeeper.shutdown();
+                        zookeeper.shutdown(true);
 
                 } catch (Exception e) {
                     e.printStackTrace();
