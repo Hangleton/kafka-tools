@@ -4,24 +4,24 @@ import kafka.cluster.Broker;
 import kafka.server.KafkaConfig;
 import kafka.zk.BrokerInfo;
 import kafka.zk.KafkaZkClient;
-import kafka.zk.ZookeeperSessionRenewer;
-import kafka.zookeeper.InstrumentedZooKeeperClient;
 import kafka.zookeeper.ZooKeeperClient;
 import org.apache.kafka.common.network.ListenerName;
 import org.apache.kafka.common.utils.Time;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.client.ZKClientConfig;
 import org.apache.zookeeper.server.*;
-import org.apache.zookeeper.server.admin.AdminServer;
-import org.apache.zookeeper.server.admin.AdminServerFactory;
 import org.apache.zookeeper.server.persistence.FileTxnSnapLog;
 import org.apache.zookeeper.server.quorum.QuorumPeerConfig;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
+import static java.util.Arrays.asList;
 import static org.apache.kafka.common.security.auth.SecurityProtocol.PLAINTEXT;
+import static org.apache.zookeeper.client.ZKClientConfig.ZOOKEEPER_CLIENT_CNXN_SOCKET;
 
 public class BrokerRegistrationTest {
     private static final KafkaConfig kafkaConfig;
@@ -40,10 +40,12 @@ public class BrokerRegistrationTest {
     private static class Zookeeper extends Thread {
         private final CountDownLatch zookeeperStopLatch;
         private final CountDownLatch zookeeperStartLatch = new CountDownLatch(1);
-        private ZookeeperRequestProcessor processor;
+        private final TestContext spec;
+        private InstrumentedRequestProcessor processor;
 
-        Zookeeper(CountDownLatch zookeeperStopLatch) {
+        Zookeeper(CountDownLatch zookeeperStopLatch, TestContext spec) {
             this.zookeeperStopLatch = zookeeperStopLatch;
+            this.spec = spec;
         }
 
         public void run() {
@@ -55,7 +57,7 @@ public class BrokerRegistrationTest {
                 config.parse("config/zookeeper.properties");
                 FileTxnSnapLog txnLog = new FileTxnSnapLog(config.getDataLogDir(), config.getDataDir());
 
-                zookeeper = new ZooKeeperServer(
+                zookeeper = new InstrumentedZooKeeperServer(
                     null,
                     txnLog,
                     config.getTickTime(),
@@ -63,18 +65,18 @@ public class BrokerRegistrationTest {
                     config.getMaxSessionTimeout(),
                     config.getClientPortListenBacklog(),
                     null,
-                    config.getInitialConfig()) {
+                    config.getInitialConfig(),
+                    spec) {
 
                     @Override
                     protected void setupRequestProcessors() {
-                        processor = new ZookeeperRequestProcessor(this);
+                        processor = new InstrumentedRequestProcessor(this, spec);
                         RequestProcessor syncProcessor = new SyncRequestProcessor(this, processor);
                         ((SyncRequestProcessor) syncProcessor).start();
                         firstProcessor = new PrepRequestProcessor(this, syncProcessor);
                         ((PrepRequestProcessor) firstProcessor).start();
                     }
                 };
-
 
                 cnxnFactory = ServerCnxnFactory.createFactory();
                 cnxnFactory.configure(
@@ -102,31 +104,63 @@ public class BrokerRegistrationTest {
                 }
             }
         }
-
-        void introduce(ZookeeperSessionRenewer renewer) {
-            this.processor.introduce(renewer);
-        }
     }
 
     public static void main(String[] args) {
+        Received createSession = new Received(ZooDefs.OpCode.createSession, false);
+
+        Iterator<Received> requestTimeline = asList(
+            new Received(ZooDefs.OpCode.createSession, true),
+            createSession,
+            new Received(ZooDefs.OpCode.multi, false),
+            new Received(ZooDefs.OpCode.createSession, true),
+            new Received(ZooDefs.OpCode.multi, true),
+            new Received(ZooDefs.OpCode.getData, true)
+        ).iterator();
+
+        Iterator<Connected> connectionTimeline = asList(
+            new Connected(0),
+            new Connected(18500),
+            new Connected(0),
+            new Connected(0),
+            new Connected(0),
+            new Connected(0)
+        ).iterator();
+
+        Iterator<Expired> sessionExpirationTimeline = asList(
+            new Expired(0),
+            new Expired(3000),
+            new Expired(0)
+        ).iterator();
+
+        TestContext testContext = new TestContext(requestTimeline, connectionTimeline, sessionExpirationTimeline);
+
         try {
             // Instantiates a standalone single-node Zookeeper server.
             CountDownLatch zookeeperStopLatch = new CountDownLatch(1);
-            Zookeeper zookeeper = new Zookeeper(zookeeperStopLatch);
+            Zookeeper zookeeper = new Zookeeper(zookeeperStopLatch, testContext);
             zookeeper.start();
             zookeeper.zookeeperStartLatch.await();
 
-            // Instantiates the Zookeeper client running in Kafka.
-            InstrumentedZooKeeperClient zookeeperClient = new InstrumentedZooKeeperClient(kafkaConfig);
-            KafkaZkClient client = new KafkaZkClient(zookeeperClient, false, Time.SYSTEM);
+            System.setProperty(ZOOKEEPER_CLIENT_CNXN_SOCKET, "ClientCnxnSocketNetty");
 
-            // Used to force recreation of a ZK session.
-            ZookeeperSessionRenewer sessionRenewer = new ZookeeperSessionRenewer(client);
-            zookeeper.introduce(sessionRenewer);
-            zookeeperClient.introduce(sessionRenewer);
+            // Instantiates the Zookeeper client running in Kafka.
+            ZooKeeperClient zookeeperClient = new ZooKeeperClient(
+                kafkaConfig.zkConnect(),
+                kafkaConfig.zkSessionTimeoutMs(),
+                kafkaConfig.zkConnectionTimeoutMs(),
+                kafkaConfig.zkMaxInFlightRequests(),
+                Time.SYSTEM,
+                "kafka.server",
+                "SessionExpireListener",
+                new ZKClientConfig(),
+                "ZkClient");
+
+            KafkaZkClient client = new KafkaZkClient(zookeeperClient, false, Time.SYSTEM);
 
             try {
                 try {
+                    createSession.awaitProcessed();
                     client.registerBroker(brokerInfo);
 
                     // The expected error log is something like:
@@ -152,11 +186,12 @@ public class BrokerRegistrationTest {
                     }
                 }
             } finally {
+                testContext.terminate();
+
                 // Delete znode so that we don't need for the znode to expire to rerun the test.
                 client.deletePath(brokerInfo.path(), -1, false);
                 client.close();
                 zookeeperStopLatch.countDown();
-                sessionRenewer.shutdown();
             }
         } catch (Exception e) {
             e.printStackTrace();

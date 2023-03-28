@@ -16,10 +16,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class UnresponsiveServerCxn extends ServerCnxn {
+public class MutedServerCxn extends ServerCnxn {
     private final ServerCnxn delegate;
 
-    public UnresponsiveServerCxn(ServerCnxn delegate) {
+    public MutedServerCxn(ServerCnxn delegate) {
         super(delegate == null ? null : delegate.zkServer);
         this.delegate = delegate;
     }
