@@ -78,7 +78,7 @@ public class Received {
 
     @Override
     public String toString() {
-        return "Received: " + op2String(opCode);
+        return "Received: " + Request.op2String(opCode);
     }
 
     enum State {

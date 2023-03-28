@@ -1,4 +1,4 @@
-package kafka.zookeeper;
+package kafka.tools;
 
 import kafka.zk.BrokerIdZNode;
 import kafka.zk.BrokerInfo;

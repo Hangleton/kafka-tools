@@ -1,4 +1,4 @@
-package kafka.repro;
+package repro;
 
 import kafka.cluster.Broker;
 import kafka.server.KafkaConfig;

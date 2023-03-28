@@ -1,0 +1,3 @@
+include 'kafka-broker-reg'
+
+rootProject.name = 'kafka-tools'
