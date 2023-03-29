@@ -107,19 +107,39 @@ public class BrokerRegistrationTest {
     }
 
     public static void main(String[] args) {
-        Received createSession = new Received(ZooDefs.OpCode.createSession, false);
+        // The second session is created on the server, but the response not sent to the client.
+        Received secondZookeeperSession = new Received(ZooDefs.OpCode.createSession, false);
 
         Iterator<Received> requestTimeline = asList(
+            // (1) First sessions is successfully established and the response sent to the client.
             new Received(ZooDefs.OpCode.createSession, true),
-            createSession,
-            new Received(ZooDefs.OpCode.multi, false),
-            new Received(ZooDefs.OpCode.createSession, true),
+
+            // (2) First znode creation for broker registration, which is successful.
             new Received(ZooDefs.OpCode.multi, true),
+
+            // (3) We let the ping timeout, and the reconnection timeout, so the client will have to create a
+            // second session, for which we do not send the response.
+            secondZookeeperSession,
+
+            // (4) The znode for broker registration is received and processed (the znode created in (2) has been
+            // deleted after the session created in (1) expired, so a new znode can be successfully created.).
+            new Received(ZooDefs.OpCode.multi, false),
+
+            // (5) After the connection timeout, the client re-attempts to create a new session, which is
+            // successful this time.
+            new Received(ZooDefs.OpCode.createSession, true),
+
+            // (6) The multi request which failed in (4) is retried, and its response NODEEXISTS is returned
+            // to the client.
+            new Received(ZooDefs.OpCode.multi, true),
+
+            // (7) The client perfoms a GetData in order to get the owner of the ephemeral znode.
             new Received(ZooDefs.OpCode.getData, true)
         ).iterator();
 
         Iterator<Connected> connectionTimeline = asList(
             new Connected(0),
+            // The connection timeout is 18 seconds. Make this connection fails so that the session expires.
             new Connected(18500),
             new Connected(0),
             new Connected(0),
@@ -129,6 +149,11 @@ public class BrokerRegistrationTest {
 
         Iterator<Expired> sessionExpirationTimeline = asList(
             new Expired(0),
+            // This allows to slightly delay the processing of the expiration (not the expiration itself) of
+            // the second session. This operation is asynchronous and can intrinsically happen before or after
+            // the processing of the third multi request. Test run show it can randomly be before or after.
+            // Introducing this artificial delay makes the test more deterministic (although it assumed the
+            // third multi request won't be delayed by 3 seconds too!).
             new Expired(3000),
             new Expired(0)
         ).iterator();
@@ -158,9 +183,13 @@ public class BrokerRegistrationTest {
 
             KafkaZkClient client = new KafkaZkClient(zookeeperClient, false, Time.SYSTEM);
 
+            client.registerBroker(brokerInfo);
+
             try {
                 try {
-                    createSession.awaitProcessed();
+                    // Send the multi(14) to create the broker znode only once the second session is created
+                    // on the server although not acknowledged by the client.
+                    secondZookeeperSession.awaitProcessed();
                     client.registerBroker(brokerInfo);
 
                     // The expected error log is something like:

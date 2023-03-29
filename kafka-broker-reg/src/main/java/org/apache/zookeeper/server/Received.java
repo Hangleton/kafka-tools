@@ -6,7 +6,6 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static org.apache.zookeeper.server.Request.op2String;
 public class Received {
     private final int opCode;
     private final Lock lock = new ReentrantLock();
@@ -52,17 +51,6 @@ public class Received {
         }
         ServerCnxn unresponsiveCxn = new MutedServerCxn(request.cnxn);
         return new DelegatingRequest(unresponsiveCxn, request);
-    }
-
-    public void awaitReceived() throws InterruptedException {
-        lock.lock();
-        try {
-            while (state.compareTo(State.received) < 0) {
-                received.await();
-            }
-        } finally {
-            lock.unlock();
-        }
     }
 
     public void awaitProcessed() throws InterruptedException {

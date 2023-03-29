@@ -4,6 +4,7 @@ import org.apache.zookeeper.ZooDefs;
 
 public class InstrumentedRequestProcessor extends FinalRequestProcessor {
     private final Received ping = new Received(ZooDefs.OpCode.ping, false);
+    // CloseSession is an internal request sent by the SessionTracker in the server. There is no RPC involved.
     private final Received closeSession = new Received(ZooDefs.OpCode.closeSession, true);
 
     private final TestContext testContext;

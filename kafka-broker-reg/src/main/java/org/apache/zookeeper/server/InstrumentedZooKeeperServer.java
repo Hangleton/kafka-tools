@@ -50,6 +50,8 @@ public class InstrumentedZooKeeperServer extends ZooKeeperServer {
 
     @Override
     public void expire(SessionTracker.Session session) {
+        // Check if sessionIds contains the session to avoid including sessions created outside the
+        // test in the sequence of session expiration events.
         if (!testContext.isTerminated() && sessionIds.contains(session.getSessionId())) {
             testContext.sessionExpirationTimeline.next().maybeInjectDelay();
         }
