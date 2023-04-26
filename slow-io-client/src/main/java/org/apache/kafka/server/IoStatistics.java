@@ -30,16 +30,19 @@ public abstract class IoStatistics {
         return new Snapshot(time, readsCompleted, readTime, writesCompleted, writeTime, queueTime);
     }
 
-    protected final long readsCompleted;
-    protected final long readTime;
-    protected final long writesCompleted;
-    protected final long writeTime;
-    protected final long queueTime;
+    protected long readsCompleted;
+    protected long readTime;
+    protected long writesCompleted;
+    protected long writeTime;
+    protected long queueTime;
 
     private static final class Snapshot extends IoStatistics implements Serializable {
         public static final long serialVersionUID = 5411787353326436545L;
 
-        private final Instant time;
+        private Instant time;
+
+        public Snapshot() {
+        }
 
         private Snapshot(Instant time, long readsCompleted, long readTime, long writesCompleted, long writeTime, long queueTime) {
             super(readsCompleted, readTime, writesCompleted, writeTime, queueTime);
@@ -124,6 +127,9 @@ public abstract class IoStatistics {
         this.writesCompleted = writesCompleted;
         this.writeTime = writeTime;
         this.queueTime = queueTime;
+    }
+
+    protected IoStatistics() {
     }
 
     public abstract IoStatistics delta(IoStatistics origin);
