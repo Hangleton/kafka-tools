@@ -89,6 +89,26 @@ public abstract class IoStatistics implements Serializable {
         public Instant time() {
             return time;
         }
+
+        public long readsCompleted() {
+            return readsCompleted;
+        }
+
+        public long readTime() {
+            return readTime;
+        }
+
+        public long writesCompleted() {
+            return writesCompleted;
+        }
+
+        public long writeTime() {
+            return writeTime;
+        }
+
+        public long queueTime() {
+            return queueTime;
+        }
     }
 
     public static IoStatistics fromRecord(ConsumerRecord<Long, byte[]> record) {
