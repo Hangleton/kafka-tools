@@ -69,7 +69,7 @@ public class IoStatisticsConsumer {
                         Record timestreamRecord = Record.builder()
                             .dimensions(dimensions)
                             .measureName("WriteOpsLatency")
-                            .measureValue("" + delta.writeOpsLatency())
+                            .measureValue("" + (Double.isNaN(delta.writeOpsLatency()) ? 0 : delta.writeOpsLatency()))
                             .time("" + stats.time().toEpochMilli())
                             .build();
 
