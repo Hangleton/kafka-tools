@@ -119,6 +119,10 @@ public abstract class IoStatistics {
         public ProducerRecord<Long, byte[]> toProducerRecord() {
             throw new IllegalStateException("Delta Statistics are not authorized to be converted to records.");
         }
+
+        public String toString() {
+            return readOpsLatency() + " " + writeOpsLatency() + " " + ioQueueSize();
+        }
     }
 
     protected IoStatistics(long readsCompleted, long readTime, long writesCompleted, long writeTime, long queueTime) {
@@ -144,9 +148,5 @@ public abstract class IoStatistics {
 
     public double writeOpsLatency() {
         return (double) writeTime / writesCompleted;
-    }
-
-    public String toString() {
-        return readsCompleted + " " + readTime;
     }
 }
