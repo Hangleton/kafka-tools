@@ -45,8 +45,7 @@ public class IoStatisticsConsumer {
 
                     if (last != null) {
                         IoStatistics delta = stats.delta(last);
-                        System.out.println(stats);
-                        System.out.println(delta);
+                        System.out.println(((IoStatistics.Snapshot) stats).time() + " " + delta);
                     }
 
                     last = stats;

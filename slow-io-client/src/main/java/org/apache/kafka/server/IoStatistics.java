@@ -40,7 +40,7 @@ public abstract class IoStatistics implements Serializable {
     protected long writeTime;
     protected long queueTime;
 
-    private static final class Snapshot extends IoStatistics implements Serializable {
+    public static final class Snapshot extends IoStatistics implements Serializable {
         public static final long serialVersionUID = 5411787353326436545L;
 
         private Instant time;
@@ -84,6 +84,10 @@ public abstract class IoStatistics implements Serializable {
         @Override
         public String toString() {
             return time + " " + readsCompleted + " " + readTime + " " + writesCompleted + " " + writeTime;
+        }
+
+        public Instant time() {
+            return time;
         }
     }
 
@@ -130,7 +134,7 @@ public abstract class IoStatistics implements Serializable {
         }
 
         public String toString() {
-            return timeSpan + " " + readOpsLatency() + " " + writeOpsLatency() + " " + ioQueueSize();
+            return "avg-read-latency: " + readOpsLatency() + " avg-write-latency: " + writeOpsLatency() + " avg-io-queue-size: " + ioQueueSize();
         }
     }
 
