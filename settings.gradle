@@ -1,3 +1,4 @@
 include 'kafka-broker-reg'
+include 'slow-io-client'
 
 rootProject.name = 'kafka-tools'
