@@ -15,6 +15,8 @@ import java.util.Arrays;
 import static java.nio.charset.Charset.defaultCharset;
 
 public abstract class IoStatistics implements Serializable {
+    public static final long serialVersionUID = 8785103947760534443L;
+
     private static final Logger log = LoggerFactory.getLogger(IoStatistics.class);
 
     public static IoStatistics newIoStatistics(Instant time, String stat) {
