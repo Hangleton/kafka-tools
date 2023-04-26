@@ -13,8 +13,6 @@ import java.util.Arrays;
 import static java.nio.charset.Charset.defaultCharset;
 
 public abstract class IoStatistics {
-    public static final long serialVersionUID = 5411787353326436545L;
-
     private static final Logger log = LoggerFactory.getLogger(IoStatistics.class);
 
     public static IoStatistics newIoStatistics(Instant time, String stat) {
@@ -39,6 +37,8 @@ public abstract class IoStatistics {
     protected final long queueTime;
 
     private static final class Snapshot extends IoStatistics implements Serializable {
+        public static final long serialVersionUID = 5411787353326436545L;
+
         private final Instant time;
 
         private Snapshot(Instant time, long readsCompleted, long readTime, long writesCompleted, long writeTime, long queueTime) {
