@@ -75,7 +75,7 @@ public class IoStatisticsConsumer {
 
                         timestreamRecords.add(timestreamRecord);
 
-                        if (timestreamRecords.size() == 100) {
+                        if (timestreamRecords.size() == 1) {
                             WriteRecordsRequest writeRecordsRequest = WriteRecordsRequest.builder()
                                 .databaseName("DiskStats")
                                 .tableName("IoStatistics")
