@@ -30,6 +30,18 @@ project('slow-io-client') {
         implementation group: 'org.apache.kafka', name: 'kafka-clients', version: '3.4.0'
         implementation group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.36'
     }
+
+    mainClassName = "io.slow.IoStatisticsConsumer"
+
+    jar {
+        manifest {
+            attributes "Main-Class": "$mainClassName"
+        }
+
+        from {
+            configurations.getByName("runtimeClasspath").collect { it.isDirectory() ? it : zipTree(it) }
+        }
+    }
 }
 
 dependencies {
