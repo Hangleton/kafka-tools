@@ -20,6 +20,7 @@ public class IoStatisticsConsumer {
         properties.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, args[0]);
         properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class.getName());
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
+        properties.put(ConsumerConfig.GROUP_ID_CONFIG, "iostats_consumer_group");
 
         KafkaConsumer<Long, byte[]> consumer = new KafkaConsumer<>(properties);
         consumer.subscribe(Collections.singletonList("__io_statistics"));
