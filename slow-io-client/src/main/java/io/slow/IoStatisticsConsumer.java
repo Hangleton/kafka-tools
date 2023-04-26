@@ -22,24 +22,29 @@ public class IoStatisticsConsumer {
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
         properties.put(ConsumerConfig.GROUP_ID_CONFIG, "iostats_consumer_group");
 
-        KafkaConsumer<Long, byte[]> consumer = new KafkaConsumer<>(properties);
-        consumer.subscribe(Collections.singletonList("__io_statistics"));
+        try {
+            KafkaConsumer<Long, byte[]> consumer = new KafkaConsumer<>(properties);
+            consumer.subscribe(Collections.singletonList("__io_statistics"));
 
-        IoStatistics last = null;
+            IoStatistics last = null;
 
-        while (true) {
-            ConsumerRecords<Long, byte[]> records = consumer.poll(Duration.ofSeconds(5));
+            while (true) {
+                ConsumerRecords<Long, byte[]> records = consumer.poll(Duration.ofSeconds(5));
 
-            for (ConsumerRecord record: records) {
-                IoStatistics stats = IoStatistics.fromRecord(record);
+                for (ConsumerRecord record: records) {
+                    IoStatistics stats = IoStatistics.fromRecord(record);
 
-                if (last != null) {
-                    IoStatistics delta = stats.delta(last);
-                    System.out.println(delta);
+                    if (last != null) {
+                        IoStatistics delta = stats.delta(last);
+                        System.out.println(delta);
+                    }
+
+                    last = stats;
                 }
-
-                last = stats;
             }
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
