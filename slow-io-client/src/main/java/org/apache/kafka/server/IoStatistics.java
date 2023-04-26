@@ -2,6 +2,8 @@ package org.apache.kafka.server;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.record.DefaultRecord;
+import org.apache.kafka.common.record.Record;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,6 +78,11 @@ public abstract class IoStatistics {
                 return new ProducerRecord<>("__io_statistics", time.toEpochMilli(), "<ERROR>".getBytes(defaultCharset()));
             }
         }
+
+        @Override
+        public String toString() {
+            return time + " " + readsCompleted + " " + readTime + " " + writesCompleted + " " + writeTime;
+        }
     }
 
     public static IoStatistics fromRecord(ConsumerRecord<Long, byte[]> record) {
@@ -121,7 +128,7 @@ public abstract class IoStatistics {
         }
 
         public String toString() {
-            return readOpsLatency() + " " + writeOpsLatency() + " " + ioQueueSize();
+            return timeSpan + " " + readOpsLatency() + " " + writeOpsLatency() + " " + ioQueueSize();
         }
     }
 
