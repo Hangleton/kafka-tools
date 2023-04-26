@@ -14,7 +14,7 @@ import java.util.Arrays;
 
 import static java.nio.charset.Charset.defaultCharset;
 
-public abstract class IoStatistics {
+public abstract class IoStatistics implements Serializable {
     private static final Logger log = LoggerFactory.getLogger(IoStatistics.class);
 
     public static IoStatistics newIoStatistics(Instant time, String stat) {

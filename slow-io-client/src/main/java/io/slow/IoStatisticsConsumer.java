@@ -9,7 +9,6 @@ import org.apache.kafka.server.IoStatistics;
 
 import java.time.Duration;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Properties;
 
 import static java.util.Collections.singletonList;
