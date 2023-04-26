@@ -62,32 +62,32 @@ public class IoStatisticsConsumer {
                     if (last != null) {
                         IoStatistics delta = stats.delta(last);
                         System.out.println(stats.time() + " " + delta);
+
+                        List<Dimension> dimensions = new ArrayList<>();
+                        dimensions.add(Dimension.builder().name("Snoopy").value("Snoopy").build());
+
+                        Record timestreamRecord = Record.builder()
+                            .dimensions(dimensions)
+                            .measureName("WriteOpsLatency")
+                            .measureValue("" + delta.writeOpsLatency())
+                            .time("" + stats.time().toEpochMilli())
+                            .build();
+
+                        timestreamRecords.add(timestreamRecord);
+
+                        if (timestreamRecords.size() == 100) {
+                            WriteRecordsRequest writeRecordsRequest = WriteRecordsRequest.builder()
+                                .databaseName("DiskStats")
+                                .tableName("IoStatistics")
+                                .records(timestreamRecords)
+                                .build();
+
+                            writeClient.writeRecords(writeRecordsRequest);
+                            timestreamRecords = new ArrayList<>();
+                        }
                     }
 
                     last = stats;
-
-                    List<Dimension> dimensions = new ArrayList<>();
-                    dimensions.add(Dimension.builder().name("Snoopy").value("Snoopy").build());
-
-                    Record timestreamRecord = Record.builder()
-                        .dimensions(dimensions)
-                        .measureName("ReadTime")
-                        .measureValue("" + stats.readTime())
-                        .time("" + stats.time().toEpochMilli())
-                        .build();
-
-                    timestreamRecords.add(timestreamRecord);
-
-                    if (timestreamRecords.size() == 100) {
-                        WriteRecordsRequest writeRecordsRequest = WriteRecordsRequest.builder()
-                            .databaseName("DiskStats")
-                            .tableName("IoStatistics")
-                            .records(timestreamRecords)
-                            .build();
-
-                        writeClient.writeRecords(writeRecordsRequest);
-                        timestreamRecords = new ArrayList<>();
-                    }
                 }
             }
 
