@@ -67,6 +67,7 @@ public class IoStatisticsConsumer {
                     last = stats;
 
                     List<Dimension> dimensions = new ArrayList<>();
+                    dimensions.add(Dimension.builder().name("Snoopy").value("Snoopy").build());
 
                     Record timestreamRecord = Record.builder()
                         .dimensions(dimensions)
