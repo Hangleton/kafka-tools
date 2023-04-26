@@ -40,6 +40,8 @@ project('slow-io-client') {
     mainClassName = "io.slow.IoStatisticsConsumer"
 
     jar {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
         manifest {
             attributes "Main-Class": "$mainClassName"
         }
