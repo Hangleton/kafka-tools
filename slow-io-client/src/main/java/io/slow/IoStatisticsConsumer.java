@@ -46,7 +46,6 @@ public class IoStatisticsConsumer {
 
                 @Override
                 public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
-                    consumer.seekToBeginning(singletonList(new TopicPartition("__io_statistics", 0)));
                 }
             });
 
