@@ -68,9 +68,9 @@ public class IoStatisticsConsumer {
                                 .addColumn("avg-write-latency")
                                 .addColumn("avg-io-queue-size")
                             .newRow()
-                                .addColumn(stats.readOpsLatency())
-                                .addColumn(stats.writeOpsLatency())
-                                .addColumn(stats.ioQueueSize())
+                                .addColumn(delta.readOpsLatency())
+                                .addColumn(delta.writeOpsLatency())
+                                .addColumn(delta.ioQueueSize())
                             .render();
 
                         System.out.println(table);
