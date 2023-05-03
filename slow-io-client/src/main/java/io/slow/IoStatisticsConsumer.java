@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.timestreamwrite.TimestreamWriteClient;
 import software.amazon.awssdk.services.timestreamwrite.model.Dimension;
 import software.amazon.awssdk.services.timestreamwrite.model.Record;
 import software.amazon.awssdk.services.timestreamwrite.model.WriteRecordsRequest;
+import table.Tables;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -60,7 +61,19 @@ public class IoStatisticsConsumer {
 
                     if (last != null) {
                         IoStatistics delta = stats.delta(last);
-                        System.out.println(stats.time() + " " + delta);
+
+                        String table = Tables.newAsciiTable()
+                            .newRow()
+                                .addColumn("avg-read-latency")
+                                .addColumn("avg-write-latency")
+                                .addColumn("avg-io-queue-size")
+                            .newRow()
+                                .addColumn(stats.readOpsLatency())
+                                .addColumn(stats.writeOpsLatency())
+                                .addColumn(stats.ioQueueSize())
+                            .render();
+
+                        System.out.println(table);
 
                         List<Dimension> dimensions = new ArrayList<>();
                         dimensions.add(Dimension.builder().name("Snoopy").value("Snoopy").build());
