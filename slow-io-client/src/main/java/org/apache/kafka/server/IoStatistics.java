@@ -12,7 +12,7 @@ import java.time.Instant;
 import static java.nio.charset.Charset.defaultCharset;
 
 public abstract class IoStatistics implements Serializable {
-    public static final long serialVersionUID = 8785103947760534443L;
+    public static final long serialVersionUID = 3060194499081562218L;
 
     private static final Logger log = LoggerFactory.getLogger(IoStatistics.class);
 
