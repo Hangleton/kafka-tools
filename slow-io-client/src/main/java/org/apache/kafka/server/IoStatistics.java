@@ -2,15 +2,12 @@ package org.apache.kafka.server;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.record.DefaultRecord;
-import org.apache.kafka.common.record.Record;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 
 import static java.nio.charset.Charset.defaultCharset;
 
@@ -19,21 +16,7 @@ public abstract class IoStatistics implements Serializable {
 
     private static final Logger log = LoggerFactory.getLogger(IoStatistics.class);
 
-    public static IoStatistics newIoStatistics(Instant time, String stat) {
-        String[] stats = Arrays.stream(stat.split("\\D+"))
-                .filter(s -> !s.isEmpty())
-                .toArray(String[]::new);
-
-        // https://www.kernel.org/doc/Documentation/block/stat.txt
-        long readsCompleted = Long.parseLong(stats[0]);
-        long readTime = Long.parseLong(stats[3]);
-        long writesCompleted = Long.parseLong(stats[4]);
-        long writeTime = Long.parseLong(stats[7]);
-        long queueTime = Long.parseLong(stats[10]);
-
-        return new Snapshot(time, readsCompleted, readTime, writesCompleted, writeTime, queueTime);
-    }
-
+    protected int brokerId;
     protected long readsCompleted;
     protected long readTime;
     protected long writesCompleted;
@@ -48,8 +31,8 @@ public abstract class IoStatistics implements Serializable {
         public Snapshot() {
         }
 
-        private Snapshot(Instant time, long readsCompleted, long readTime, long writesCompleted, long writeTime, long queueTime) {
-            super(readsCompleted, readTime, writesCompleted, writeTime, queueTime);
+        private Snapshot(int brokerId, Instant time, long readsCompleted, long readTime, long writesCompleted, long writeTime, long queueTime) {
+            super(brokerId, readsCompleted, readTime, writesCompleted, writeTime, queueTime);
             this.time = time;
         }
 
@@ -58,7 +41,7 @@ public abstract class IoStatistics implements Serializable {
             if (!(origin instanceof Snapshot)) {
                 throw new IllegalStateException("IoStatistics is not a snapshot, cannot compute delta.");
             }
-            return new Delta((Snapshot) origin, this);
+            return new Delta(origin.brokerId, (Snapshot) origin, this);
         }
 
         @Override
@@ -83,7 +66,7 @@ public abstract class IoStatistics implements Serializable {
 
         @Override
         public String toString() {
-            return time + " " + readsCompleted + " " + readTime + " " + writesCompleted + " " + writeTime;
+            return "Broker " + brokerId + " " + time + " " + readsCompleted + " " + readTime + " " + writesCompleted + " " + writeTime;
         }
 
         public Instant time() {
@@ -126,8 +109,9 @@ public abstract class IoStatistics implements Serializable {
     private static final class Delta extends IoStatistics {
         private final Duration timeSpan;
 
-        private Delta(Snapshot origin, Snapshot stat) {
+        private Delta(int brokerId, Snapshot origin, Snapshot stat) {
             super(
+                brokerId,
                 stat.readsCompleted - origin.readsCompleted,
                 stat.readTime - origin.readTime,
                 stat.writesCompleted - origin.writesCompleted,
@@ -158,7 +142,8 @@ public abstract class IoStatistics implements Serializable {
         }
     }
 
-    protected IoStatistics(long readsCompleted, long readTime, long writesCompleted, long writeTime, long queueTime) {
+    protected IoStatistics(int brokerId, long readsCompleted, long readTime, long writesCompleted, long writeTime, long queueTime) {
+        this.brokerId = brokerId;
         this.readsCompleted = readsCompleted;
         this.readTime = readTime;
         this.writesCompleted = writesCompleted;
