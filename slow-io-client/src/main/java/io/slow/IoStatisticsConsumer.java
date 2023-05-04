@@ -49,6 +49,7 @@ public class IoStatisticsConsumer {
 
                 @Override
                 public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
+                    consumer.seekToEnd(partitions);
                 }
             });
 
