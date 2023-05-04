@@ -43,6 +43,7 @@ public class IoStatisticsConsumer {
         properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class.getName());
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
         properties.put(ConsumerConfig.GROUP_ID_CONFIG, "iostats_consumer_group");
+        properties.put("application.id", "phoque");
 
         try {
             KafkaConsumer<Long, byte[]> consumer = new KafkaConsumer<>(properties);
