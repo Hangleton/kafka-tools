@@ -13,6 +13,7 @@ import org.apache.kafka.server.IoStatistics;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.kstream.ForeachAction;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
@@ -66,7 +67,9 @@ public class IoStatisticsConsumer {
             TimestampFormatter timestampFormatter = new TimestampFormatter();
 
             StreamsBuilder streamsBuilder = new StreamsBuilder();
-            streamsBuilder.stream("__io_statistics").foreach(((key, value) -> System.out.println(value)));
+            streamsBuilder
+                .<Long, byte[]> stream("__io_statistics")
+                .foreach(new IostatsPrinter());
             KafkaStreams s = new KafkaStreams(streamsBuilder.build(), properties);
             s.start();
 
@@ -147,6 +150,35 @@ public class IoStatisticsConsumer {
         return TimestreamQueryClient.builder()
             .region(Region.US_EAST_1)
             .build();
+    }
+
+    private static class IostatsPrinter implements ForeachAction<Long, byte[]> {
+        private final IostatsFormatter iostatsFormatter = new IostatsFormatter();
+        private final TimestampFormatter timestampFormatter = new TimestampFormatter();
+        private IoStatistics last = null;
+
+        @Override
+        public void apply(Long key, byte[] value) {
+            try {
+                IoStatistics.Snapshot stats = (IoStatistics.Snapshot) IoStatistics.fromRecord(value);
+
+                if (last != null) {
+                    IoStatistics delta = stats.delta(last);
+                    String table = Tables.newAsciiTable()
+                            .newRow()
+                            .addColumn(stats.time(), timestampFormatter)
+                            .addColumn(delta, iostatsFormatter)
+                            .render();
+
+                    System.out.print(table);
+                }
+
+                last = stats;
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private static class IostatsFormatter implements Formatter<IoStatistics> {
