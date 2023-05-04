@@ -46,7 +46,7 @@ public class IoStatisticsConsumer {
         properties.put(StreamsConfig.APPLICATION_ID_CONFIG, "phoque");
 
         try {
-            KafkaConsumer<Long, byte[]> consumer = new KafkaConsumer<>(properties);
+            /*KafkaConsumer<Long, byte[]> consumer = new KafkaConsumer<>(properties);
             consumer.subscribe(singletonList("__io_statistics"), new ConsumerRebalanceListener() {
                 @Override
                 public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
@@ -56,7 +56,7 @@ public class IoStatisticsConsumer {
                 public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
                     consumer.seekToEnd(partitions);
                 }
-            });
+            });*/
 
             IoStatistics last = null;
             List<Record> timestreamRecords = new ArrayList<>();
@@ -71,6 +71,7 @@ public class IoStatisticsConsumer {
 
             System.in.read();
 
+            KafkaConsumer<Long, byte[]> consumer = null;
             while (true) {
                 ConsumerRecords<Long, byte[]> records = consumer.poll(Duration.ofSeconds(5));
 
