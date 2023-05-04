@@ -1,7 +1,5 @@
 package io.slow;
 
-import common.table.AsciiTable;
-import common.table.Table;
 import common.table.Table.Color;
 import common.table.Table.Formatter;
 import common.table.Tables;
@@ -23,11 +21,12 @@ import software.amazon.awssdk.services.timestreamwrite.model.Record;
 import software.amazon.awssdk.services.timestreamwrite.model.WriteRecordsRequest;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
-import java.util.function.Function;
 
 import static java.util.Collections.singletonList;
 
@@ -66,7 +65,8 @@ public class IoStatisticsConsumer {
 
             System.out.println(header);
 
-            MetricsFormatter formatter = new MetricsFormatter();
+            IostatsFormatter iostatsFormatter = new IostatsFormatter();
+            TimestampFormatter timestampFormatter = new TimestampFormatter();
 
             while (true) {
                 ConsumerRecords<Long, byte[]> records = consumer.poll(Duration.ofSeconds(5));
@@ -78,8 +78,8 @@ public class IoStatisticsConsumer {
                         IoStatistics delta = stats.delta(last);
                         String table = Tables.newAsciiTable()
                             .newRow()
-                                .addColumn(stats.time())
-                                .addColumn(delta, formatter)
+                                .addColumn(stats.time(), timestampFormatter)
+                                .addColumn(delta, iostatsFormatter)
                             .render();
 
                         System.out.print(table);
@@ -144,12 +144,12 @@ public class IoStatisticsConsumer {
             .build();
     }
 
-    private static class MetricsFormatter implements Formatter<IoStatistics> {
+    private static class IostatsFormatter implements Formatter<IoStatistics> {
         @Override
         public String format(IoStatistics stats) {
             return stringify(stats.readOpsLatency(), 2)
-                + " : " + stringify(stats.writeOpsLatency(), 2)
-                + " : " + stringify(stats.ioQueueSize(), 2);
+                + ":" + stringify(stats.writeOpsLatency(), 2)
+                + ":" + stringify(stats.ioQueueSize(), 2);
         }
 
         private String stringify(double latency, double threshold) {
@@ -160,6 +160,15 @@ public class IoStatisticsConsumer {
 
             String text = Double.isNaN(latency) ? "NaN " : String.format("%.2f", latency);
             return color + text + Color.reset;
+        }
+    }
+
+    private static class TimestampFormatter implements Formatter<Instant> {
+        private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        @Override
+        public String format(Instant instant) {
+            return formatter.format(instant);
         }
     }
 }
