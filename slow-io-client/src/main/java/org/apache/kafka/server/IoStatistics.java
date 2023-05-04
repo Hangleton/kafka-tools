@@ -94,9 +94,9 @@ public abstract class IoStatistics implements Serializable {
         }
     }
 
-    public static IoStatistics fromRecord(ConsumerRecord<Long, byte[]> record) {
+    public static IoStatistics fromRecord(byte[] record) {
         try {
-            ByteArrayInputStream bis = new ByteArrayInputStream(record.value());
+            ByteArrayInputStream bis = new ByteArrayInputStream(record);
             ObjectInputStream ois = new ObjectInputStream(bis);
             return (IoStatistics) ois.readObject();
 

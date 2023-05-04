@@ -9,6 +9,8 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.server.IoStatistics;
+import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.kstream.KTable;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.retry.RetryPolicy;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
@@ -56,22 +58,20 @@ public class IoStatisticsConsumer {
             IoStatistics last = null;
             List<Record> timestreamRecords = new ArrayList<>();
 
-            String header = Tables.newAsciiTable()
-                .newRow()
-                    .addColumn("t")
-                    .addColumn("r:w:q")
-                .render();
-
-            System.out.println(header);
-
             IostatsFormatter iostatsFormatter = new IostatsFormatter();
             TimestampFormatter timestampFormatter = new TimestampFormatter();
+
+            StreamsBuilder streamsBuilder = new StreamsBuilder();
+            KTable<Long, byte[]> t = streamsBuilder.table("__io_statistics");
+            t.toStream().foreach((key, value) -> {
+                System.out.println(value);
+            });
 
             while (true) {
                 ConsumerRecords<Long, byte[]> records = consumer.poll(Duration.ofSeconds(5));
 
-                for (ConsumerRecord record: records) {
-                    IoStatistics.Snapshot stats = (IoStatistics.Snapshot) IoStatistics.fromRecord(record);
+                for (ConsumerRecord<Long, byte[]> record: records) {
+                    IoStatistics.Snapshot stats = (IoStatistics.Snapshot) IoStatistics.fromRecord(record.value());
 
                     if (last != null) {
                         IoStatistics delta = stats.delta(last);
