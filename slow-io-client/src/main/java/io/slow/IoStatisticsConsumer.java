@@ -148,13 +148,14 @@ public class IoStatisticsConsumer {
         @Override
         public String format(IoStatistics stats) {
             return stringify(stats.readOpsLatency(), 2)
-                + ":" + stringify(stats.writeOpsLatency(), 2)
-                + ":" + stringify(stats.ioQueueSize(), 2);
+                + " : " + stringify(stats.writeOpsLatency(), 2)
+                + " : " + stringify(stats.ioQueueSize(), 2);
         }
 
         private String stringify(double latency, double threshold) {
             Color color = latency > threshold ? Color.red : Color.green;
-            return String.format("%s%.2f%s", color.code(), latency, Color.reset);
+            String text = Double.isNaN(latency) ? "NaN " : Double.toString(latency);
+            return String.format("%s%.2f%s", color.code(), text, Color.reset);
         }
     }
 }
