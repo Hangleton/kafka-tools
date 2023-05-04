@@ -29,6 +29,7 @@ public interface Table {
 
     enum Color {
         black("\u001B[30m"),
+        white("\u001B[37m"),
         red("\u001B[31m"),
         green("\u001B[32m"),
         blue("\u001B[34m");
