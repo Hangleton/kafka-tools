@@ -8,6 +8,7 @@ import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.LongDeserializer;
+import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.server.IoStatistics;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -41,8 +42,8 @@ public class IoStatisticsConsumer {
 
         Properties properties = new Properties();
         properties.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, args[0]);
-        properties.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, LongDeserializer.class.getName());
-        properties.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
+        properties.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.LongSerde.class.getName());
+        properties.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.ByteArraySerde.class.getName());
         properties.put(StreamsConfig.APPLICATION_ID_CONFIG, "phoque");
 
         try {
