@@ -1,10 +1,11 @@
-package table;
+package common.table;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 import static java.lang.Math.max;
 import static java.lang.String.format;
@@ -90,6 +91,16 @@ public class AsciiTable implements Table {
             }
         }
 
+        public Row addColumn(Object content, Function<Object, Color> color) {
+            String c = color.apply(content).code();
+            synchronized (AsciiTable.this) {
+                columns.add(content instanceof Number ?
+                    format("%s%.3f%s", c, ((Number) content).doubleValue(), reset)
+                    : valueOf(content));
+                return this;
+            }
+        }
+
         @Override
         public Row newRow() {
             return AsciiTable.this.newRow();
@@ -99,5 +110,22 @@ public class AsciiTable implements Table {
         public String render() {
             return AsciiTable.this.render();
         }
+    }
+
+    private static final String reset = "\u001B[0m";
+
+    public static void main(String[] args) {
+        Function<Object, Color> color = o -> {
+            if (!(o instanceof Number)) {
+                return Color.black;
+            }
+
+            return (((Number)o).doubleValue() > 7d) ? Color.red : Color.green;
+        };
+
+        Table table = Tables.newAsciiTable();
+        table.newRow().addColumn("C1").addColumn("C2").newRow().addColumn(4.5, color).addColumn(2, color);
+        table.newRow().addColumn(7.5, color).addColumn(6.3, color);
+        System.out.println(table.render());
     }
 }

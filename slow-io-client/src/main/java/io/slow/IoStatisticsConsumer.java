@@ -1,5 +1,8 @@
 package io.slow;
 
+import common.table.Table;
+import common.table.Table.Color;
+import common.table.Tables;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.TopicPartition;
@@ -16,13 +19,13 @@ import software.amazon.awssdk.services.timestreamwrite.TimestreamWriteClient;
 import software.amazon.awssdk.services.timestreamwrite.model.Dimension;
 import software.amazon.awssdk.services.timestreamwrite.model.Record;
 import software.amazon.awssdk.services.timestreamwrite.model.WriteRecordsRequest;
-import table.Tables;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+import java.util.function.Function;
 
 import static java.util.Collections.singletonList;
 
@@ -53,6 +56,18 @@ public class IoStatisticsConsumer {
             IoStatistics last = null;
             List<Record> timestreamRecords = new ArrayList<>();
 
+            String header = Tables.newAsciiTable()
+                    .newRow()
+                    .addColumn("timestamp")
+                    .addColumn("avg-read-latency")
+                    .addColumn("avg-write-latency")
+                    .addColumn("avg-io-queue-size")
+                    .render();
+
+            System.out.println(header);
+
+            Function<Object, Color> colorForLatency = color(5, Color.red, Color.green);
+
             while (true) {
                 ConsumerRecords<Long, byte[]> records = consumer.poll(Duration.ofSeconds(5));
 
@@ -61,15 +76,10 @@ public class IoStatisticsConsumer {
 
                     if (last != null) {
                         IoStatistics delta = stats.delta(last);
-
                         String table = Tables.newAsciiTable()
                             .newRow()
-                                .addColumn("avg-read-latency")
-                                .addColumn("avg-write-latency")
-                                .addColumn("avg-io-queue-size")
-                            .newRow()
-                                .addColumn(delta.readOpsLatency())
-                                .addColumn(delta.writeOpsLatency())
+                                .addColumn(delta.readOpsLatency(), colorForLatency)
+                                .addColumn(delta.writeOpsLatency(), colorForLatency)
                                 .addColumn(delta.ioQueueSize())
                             .render();
 
@@ -133,5 +143,15 @@ public class IoStatisticsConsumer {
         return TimestreamQueryClient.builder()
                 .region(Region.US_EAST_1)
                 .build();
+    }
+
+    private static Function<Object, Color> color(double threshold, Color above, Color below) {
+        return o -> {
+            if (!(o instanceof Number)) {
+                return Color.black;
+            }
+
+            return (((Number)o).doubleValue() > threshold) ? above : below;
+        };
     }
 }
