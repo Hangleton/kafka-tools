@@ -154,7 +154,7 @@ public class IoStatisticsConsumer {
 
         private String stringify(double latency, double threshold) {
             Color color = latency > threshold ? Color.red : Color.green;
-            return String.format("%s%.2f%s", color, latency, Color.reset);
+            return String.format("%s%.2f%s", color.code(), latency, Color.reset);
         }
     }
 }
