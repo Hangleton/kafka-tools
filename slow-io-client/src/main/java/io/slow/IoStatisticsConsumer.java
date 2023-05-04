@@ -154,8 +154,8 @@ public class IoStatisticsConsumer {
 
         private String stringify(double latency, double threshold) {
             Color color = latency > threshold ? Color.red : Color.green;
-            String text = Double.isNaN(latency) ? "NaN " : Double.toString(latency);
-            return String.format("%s%.2f%s", color.code(), text, Color.reset);
+            String text = Double.isNaN(latency) ? "NaN " : String.format("%.2f", latency);
+            return color.code() + text + Color.reset;
         }
     }
 }
