@@ -1,7 +1,9 @@
 package io.slow;
 
+import common.table.Table;
 import common.table.Table.Color;
 import common.table.Table.Formatter;
+import common.table.Table.Row;
 import common.table.Tables;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.*;
@@ -13,9 +15,7 @@ import org.apache.kafka.server.IoStatistics;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
-import org.apache.kafka.streams.kstream.ForeachAction;
-import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.KTable;
+import org.apache.kafka.streams.kstream.*;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.retry.RetryPolicy;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
@@ -31,6 +31,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static java.util.Collections.singletonList;
@@ -69,6 +70,13 @@ public class IoStatisticsConsumer {
             StreamsBuilder streamsBuilder = new StreamsBuilder();
             streamsBuilder
                 .<Long, byte[]> stream("__io_statistics")
+                .groupBy((key, value) -> Instant.ofEpochMilli(key).truncatedTo(ChronoUnit.SECONDS))
+                .aggregate(() -> new ArrayList<>(),
+                    (Aggregator<Instant, byte[], List<IoStatistics.Snapshot>>) (key, value, aggregate) -> {
+                        aggregate.add((IoStatistics.Snapshot) IoStatistics.fromRecord(value));
+                        return aggregate;
+                })
+                .toStream()
                 .foreach(new IostatsPrinter());
             KafkaStreams s = new KafkaStreams(streamsBuilder.build(), properties);
             s.start();
@@ -119,7 +127,6 @@ public class IoStatisticsConsumer {
                     last = stats;
                 }
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -152,28 +159,36 @@ public class IoStatisticsConsumer {
             .build();
     }
 
-    private static class IostatsPrinter implements ForeachAction<Long, byte[]> {
+    private static class IostatsPrinter implements ForeachAction<Instant, List<IoStatistics.Snapshot>> {
         private final IostatsFormatter iostatsFormatter = new IostatsFormatter();
         private final TimestampFormatter timestampFormatter = new TimestampFormatter();
-        private IoStatistics last = null;
+        private final Map<Integer, IoStatistics.Snapshot> lastStats = new HashMap<>();
 
         @Override
-        public void apply(Long key, byte[] value) {
+        public void apply(Instant timestamp, List<IoStatistics.Snapshot> values) {
+            Collections.sort(values, Comparator.comparing(IoStatistics::brokerId));
+            Row row = Tables.newAsciiTable().newRow();
+            row.addColumn("Timestamp");
+
             try {
-                IoStatistics.Snapshot stats = (IoStatistics.Snapshot) IoStatistics.fromRecord(value);
-
-                if (last != null) {
-                    IoStatistics delta = stats.delta(last);
-                    String table = Tables.newAsciiTable()
-                            .newRow()
-                            .addColumn(stats.time(), timestampFormatter)
-                            .addColumn(delta, iostatsFormatter)
-                            .render();
-
-                    System.out.print(table);
+                for (IoStatistics.Snapshot stats: values) {
+                    row.addColumn(stats.brokerId());
                 }
 
-                last = stats;
+                row = row.newRow();
+                row.addColumn(timestamp, timestampFormatter);
+
+                for (IoStatistics.Snapshot stats: values) {
+                    if (lastStats.containsKey(stats.brokerId())) {
+                        IoStatistics.Snapshot last = lastStats.get(stats.brokerId());
+                        IoStatistics delta = stats.delta(last);
+                        row.addColumn(delta, iostatsFormatter);
+                    }
+
+                    lastStats.put(stats.brokerId(), stats);
+                }
+
+                System.out.print(row.render());
 
             } catch (Exception e) {
                 e.printStackTrace();

@@ -167,4 +167,8 @@ public abstract class IoStatistics implements Serializable {
     public double writeOpsLatency() {
         return (double) writeTime / writesCompleted;
     }
+
+    public int brokerId() {
+        return brokerId;
+    }
 }
