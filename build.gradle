@@ -42,6 +42,7 @@ project('slow-io-client') {
     mainClassName = "io.slow.IoStatisticsConsumer"
 
     jar {
+        dependsOn(':ascii-tables:jar')
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
         manifest {
