@@ -101,9 +101,6 @@ public class AsciiTable implements Table {
 
             synchronized (AsciiTable.this) {
                 columns.add(text);
-                columns.add(content instanceof Number ?
-                    format("%s%.2f%s", c, ((Number) content).doubleValue(), reset)
-                    : valueOf(content));
                 return this;
             }
         }
