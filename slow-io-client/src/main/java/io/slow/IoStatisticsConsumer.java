@@ -22,11 +22,9 @@ import software.amazon.awssdk.services.timestreamwrite.model.WriteRecordsRequest
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 import static java.util.Collections.singletonList;
 
@@ -164,7 +162,10 @@ public class IoStatisticsConsumer {
     }
 
     private static class TimestampFormatter implements Formatter<Instant> {
-        private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("YYYY-MM-dd HH:mm:ss");
+        private static DateTimeFormatter formatter = DateTimeFormatter
+            .ofPattern("YYYY-MM-dd HH:mm:ss")
+            .withLocale(Locale.getDefault())
+            .withZone(ZoneId.systemDefault());
 
         @Override
         public String format(Instant instant) {
