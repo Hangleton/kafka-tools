@@ -164,7 +164,7 @@ public class IoStatisticsConsumer {
     }
 
     private static class TimestampFormatter implements Formatter<Instant> {
-        private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("YYYY-MM-dd HH:mm:ss");
 
         @Override
         public String format(Instant instant) {
