@@ -96,6 +96,7 @@ public class AsciiTable implements Table {
             try {
                 text = formatter.format((T) content);
             } catch (Exception e) {
+                e.printStackTrace();
                 text = valueOf(content);
             }
 
