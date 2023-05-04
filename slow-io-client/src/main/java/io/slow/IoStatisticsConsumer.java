@@ -1,7 +1,9 @@
 package io.slow;
 
+import common.table.AsciiTable;
 import common.table.Table;
 import common.table.Table.Color;
+import common.table.Table.Formatter;
 import common.table.Tables;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.*;
@@ -57,16 +59,14 @@ public class IoStatisticsConsumer {
             List<Record> timestreamRecords = new ArrayList<>();
 
             String header = Tables.newAsciiTable()
-                    .newRow()
-                    .addColumn("timestamp")
-                    .addColumn("avg-read-latency")
-                    .addColumn("avg-write-latency")
-                    .addColumn("avg-io-queue-size")
-                    .render();
+                .newRow()
+                    .addColumn("t")
+                    .addColumn("r:w:q")
+                .render();
 
             System.out.println(header);
 
-            Function<Object, Color> colorForLatency = color(5, Color.red, Color.green);
+            MetricsFormatter formatter = new MetricsFormatter();
 
             while (true) {
                 ConsumerRecords<Long, byte[]> records = consumer.poll(Duration.ofSeconds(5));
@@ -78,12 +78,11 @@ public class IoStatisticsConsumer {
                         IoStatistics delta = stats.delta(last);
                         String table = Tables.newAsciiTable()
                             .newRow()
-                                .addColumn(delta.readOpsLatency(), colorForLatency)
-                                .addColumn(delta.writeOpsLatency(), colorForLatency)
-                                .addColumn(delta.ioQueueSize())
+                                .addColumn(stats.time())
+                                .addColumn(delta, formatter)
                             .render();
 
-                        System.out.println(table);
+                        System.out.print(table);
 
                         List<Dimension> dimensions = new ArrayList<>();
                         dimensions.add(Dimension.builder().name("Snoopy").value("Snoopy").build());
@@ -141,17 +140,21 @@ public class IoStatisticsConsumer {
 
     private static TimestreamQueryClient buildQueryClient() {
         return TimestreamQueryClient.builder()
-                .region(Region.US_EAST_1)
-                .build();
+            .region(Region.US_EAST_1)
+            .build();
     }
 
-    private static Function<Object, Color> color(double threshold, Color above, Color below) {
-        return o -> {
-            if (!(o instanceof Number)) {
-                return Color.black;
-            }
+    private static class MetricsFormatter implements Formatter<IoStatistics> {
+        @Override
+        public String format(IoStatistics stats) {
+            return stringify(stats.readOpsLatency(), 2)
+                + ":" + stringify(stats.writeOpsLatency(), 2)
+                + ":" + stringify(stats.ioQueueSize(), 2);
+        }
 
-            return (((Number)o).doubleValue() > threshold) ? above : below;
-        };
+        private String stringify(double latency, double threshold) {
+            Color color = latency > threshold ? Color.red : Color.green;
+            return String.format("%s%.2f%s", color, latency, Color.reset);
+        }
     }
 }

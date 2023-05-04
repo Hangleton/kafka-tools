@@ -16,11 +16,15 @@ public interface Table {
 
         Row addColumn(Object content);
 
-        Row addColumn(Object content, Function<Object, Color> color);
+        <T> Row addColumn(Object content, Formatter<T> formatter);
 
         Row newRow();
 
         String render();
+    }
+
+    interface Formatter<T> {
+        String format(T content);
     }
 
     enum Color {
@@ -28,6 +32,8 @@ public interface Table {
         red("\u001B[31m"),
         green("\u001B[32m"),
         blue("\u001B[34m");
+
+        public static final String reset = "\u001B[0m";
 
         private final String asciiCode;
 

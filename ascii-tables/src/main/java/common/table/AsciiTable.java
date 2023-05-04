@@ -86,16 +86,23 @@ public class AsciiTable implements Table {
         @Override
         public Row addColumn(Object content) {
             synchronized (AsciiTable.this) {
-                columns.add(content instanceof Double ?  format("%.3f", content) : valueOf(content));
+                columns.add(content instanceof Double ?  format("%.2f", content) : valueOf(content));
                 return this;
             }
         }
 
-        public Row addColumn(Object content, Function<Object, Color> color) {
-            String c = color.apply(content).code();
+        public <T> Row addColumn(Object content, Formatter<T> formatter) {
+            String text;
+            try {
+                text = formatter.format((T) content);
+            } catch (Exception e) {
+                text = valueOf(content);
+            }
+
             synchronized (AsciiTable.this) {
+                columns.add(text);
                 columns.add(content instanceof Number ?
-                    format("%s%.3f%s", c, ((Number) content).doubleValue(), reset)
+                    format("%s%.2f%s", c, ((Number) content).doubleValue(), reset)
                     : valueOf(content));
                 return this;
             }
@@ -111,8 +118,6 @@ public class AsciiTable implements Table {
             return AsciiTable.this.render();
         }
     }
-
-    private static final String reset = "\u001B[0m";
 
     public static void main(String[] args) {
         Function<Object, Color> color = o -> {
