@@ -118,19 +118,4 @@ public class AsciiTable implements Table {
             return AsciiTable.this.render();
         }
     }
-
-    public static void main(String[] args) {
-        Function<Object, Color> color = o -> {
-            if (!(o instanceof Number)) {
-                return Color.black;
-            }
-
-            return (((Number)o).doubleValue() > 7d) ? Color.red : Color.green;
-        };
-
-        Table table = Tables.newAsciiTable();
-        table.newRow().addColumn("C1").addColumn("C2").newRow().addColumn(4.5, color).addColumn(2, color);
-        table.newRow().addColumn(7.5, color).addColumn(6.3, color);
-        System.out.println(table.render());
-    }
 }
