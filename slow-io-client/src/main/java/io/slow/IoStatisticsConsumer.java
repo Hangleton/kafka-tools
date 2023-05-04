@@ -9,7 +9,9 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.server.IoStatistics;
+import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.retry.RetryPolicy;
@@ -62,10 +64,11 @@ public class IoStatisticsConsumer {
             TimestampFormatter timestampFormatter = new TimestampFormatter();
 
             StreamsBuilder streamsBuilder = new StreamsBuilder();
-            KTable<Long, byte[]> t = streamsBuilder.table("__io_statistics");
-            t.toStream().foreach((key, value) -> {
-                System.out.println(value);
-            });
+            streamsBuilder.stream("__io_statistics").foreach(((key, value) -> System.out.println(value)));
+            KafkaStreams s = new KafkaStreams(streamsBuilder.build(), properties);
+            s.start();
+
+            System.in.read();
 
             while (true) {
                 ConsumerRecords<Long, byte[]> records = consumer.poll(Duration.ofSeconds(5));
