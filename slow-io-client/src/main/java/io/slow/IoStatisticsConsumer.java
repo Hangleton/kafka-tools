@@ -11,6 +11,7 @@ import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.server.IoStatistics;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
@@ -40,10 +41,9 @@ public class IoStatisticsConsumer {
 
         Properties properties = new Properties();
         properties.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, args[0]);
-        properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class.getName());
-        properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
-        properties.put(ConsumerConfig.GROUP_ID_CONFIG, "iostats_consumer_group");
-        properties.put("application.id", "phoque");
+        properties.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, LongDeserializer.class.getName());
+        properties.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
+        properties.put(StreamsConfig.APPLICATION_ID_CONFIG, "phoque");
 
         try {
             KafkaConsumer<Long, byte[]> consumer = new KafkaConsumer<>(properties);
