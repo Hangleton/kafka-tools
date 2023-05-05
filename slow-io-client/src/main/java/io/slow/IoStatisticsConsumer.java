@@ -45,7 +45,7 @@ public class IoStatisticsConsumer {
         properties.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, InstantSerde.class.getName());
         properties.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, IoStatisticsSerde.class.getName());
         properties.put(StreamsConfig.APPLICATION_ID_CONFIG, "phoque2");
-        properties.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, "1000");
+        properties.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, "2000");
 
         try {
             /*KafkaConsumer<Long, byte[]> consumer = new KafkaConsumer<>(properties);
@@ -78,7 +78,7 @@ public class IoStatisticsConsumer {
                     )
                 )
                 .groupBy((key, value) -> key.truncatedTo(ChronoUnit.SECONDS))
-                .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofSeconds(1)))
+                .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofSeconds(2)))
                 .aggregate(
                     () -> new ArrayList<>(),
                     (key, value, aggregate) -> {
