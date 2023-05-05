@@ -209,7 +209,7 @@ public class IoStatisticsConsumer {
                 }
 
                 for (int i = 0; i < deltas.firstKey() - 1; ++i) {
-                    row.addColumn("");
+                    row.addColumn(" ");
                 }
 
                 for (IoStatistics delta: deltas.values()) {
