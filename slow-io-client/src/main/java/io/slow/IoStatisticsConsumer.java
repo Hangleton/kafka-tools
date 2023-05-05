@@ -249,7 +249,7 @@ public class IoStatisticsConsumer {
     private static class HeaderFormatter implements Formatter<String> {
         @Override
         public String format(String content) {
-            return Color.whiteBold + content + Color.reset;
+            return Color.whiteBold.code() + content + Color.reset;
         }
     }
 }
