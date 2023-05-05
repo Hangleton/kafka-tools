@@ -45,6 +45,7 @@ public class IoStatisticsConsumer {
         properties.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, InstantSerde.class.getName());
         properties.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, IoStatisticsSerde.class.getName());
         properties.put(StreamsConfig.APPLICATION_ID_CONFIG, "phoque2");
+        properties.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, "10");
 
         try {
             /*KafkaConsumer<Long, byte[]> consumer = new KafkaConsumer<>(properties);
