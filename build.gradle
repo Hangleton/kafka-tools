@@ -28,9 +28,24 @@ project('kafka-broker-reg') {
 project('ascii-tables') {
 }
 
+project('kafka-storage-api') {
+    dependencies {
+        implementation group: 'org.apache.kafka', name: 'kafka-clients', version: '3.4.0'
+    }
+}
+
 project('io-stats-common') {
     dependencies {
         implementation group: 'org.apache.kafka', name: 'kafka-clients', version: '3.4.0'
+    }
+}
+
+project('io-stats-plugin') {
+    dependencies {
+        implementation group: 'org.apache.kafka', name: 'kafka-clients', version: '3.4.0'
+        implementation group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.36'
+        implementation project(':kafka-storage-api')
+        implementation project(':io-stats-common')
     }
 }
 

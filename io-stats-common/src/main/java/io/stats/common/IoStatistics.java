@@ -3,6 +3,7 @@ package io.stats.common;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 
 public abstract class IoStatistics implements Serializable {
     public static final long serialVersionUID = 8785103947760534443L;
@@ -13,6 +14,21 @@ public abstract class IoStatistics implements Serializable {
     protected long writesCompleted;
     protected long writeTime;
     protected long queueTime;
+
+    public static IoStatistics newIoStatistics(int brokerId, Instant time, String stat) {
+        String[] stats = Arrays.stream(stat.split("\\D+"))
+                .filter(s -> !s.isEmpty())
+                .toArray(String[]::new);
+
+        // https://www.kernel.org/doc/Documentation/block/stat.txt
+        long readsCompleted = Long.parseLong(stats[0]);
+        long readTime = Long.parseLong(stats[3]);
+        long writesCompleted = Long.parseLong(stats[4]);
+        long writeTime = Long.parseLong(stats[7]);
+        long queueTime = Long.parseLong(stats[10]);
+
+        return new Snapshot(brokerId, time, readsCompleted, readTime, writesCompleted, writeTime, queueTime);
+    }
 
     public static final class Snapshot extends IoStatistics implements Serializable {
         public static final long serialVersionUID = 5411787353326436545L;
