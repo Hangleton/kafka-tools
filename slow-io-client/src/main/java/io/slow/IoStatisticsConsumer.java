@@ -90,6 +90,7 @@ public class IoStatisticsConsumer {
                 .foreach(new IostatsPrinter());
 
             KafkaStreams s = new KafkaStreams(streamsBuilder.build(), properties);
+            s.cleanUp();
             s.start();
 
             System.in.read();
