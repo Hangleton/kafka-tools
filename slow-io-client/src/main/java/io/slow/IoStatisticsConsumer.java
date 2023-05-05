@@ -15,7 +15,6 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
-import org.apache.kafka.streams.processor.TimestampExtractor;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.retry.RetryPolicy;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
@@ -185,9 +184,9 @@ public class IoStatisticsConsumer {
             Row row = Tables.newAsciiTable().newRow();
 
             if (it == 0) {
-                row.addColumn("Timestamp", headerFormatter);
+                row.newRow().addColumn("Timestamp", headerFormatter);
                 for (IoStatistics stats: values) {
-                    row.addColumn("Broker " + stats.brokerId());
+                    row.addColumn("Broker " + stats.brokerId(), headerFormatter);
                 }
 
                 row = row.newRow();
@@ -249,7 +248,7 @@ public class IoStatisticsConsumer {
     private static class HeaderFormatter implements Formatter<String> {
         @Override
         public String format(String content) {
-            return Color.whiteBold.code() + content + Color.reset;
+            return Color.whiteBright.code() + content + Color.reset;
         }
     }
 }
