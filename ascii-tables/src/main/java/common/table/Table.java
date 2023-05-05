@@ -22,7 +22,34 @@ public interface Table {
     }
 
     interface Formatter<T> {
-        String format(T content);
+        FormattedString format(T content);
+    }
+
+    public static final class FormattedString {
+        private final String string;
+        private final int size;
+
+        public FormattedString(String string, int size) {
+            this.string = string;
+            this.size = size;
+        }
+
+        @Override
+        public String toString() {
+            return string;
+        }
+
+        public int size() {
+            return size;
+        }
+
+        public FormattedString concat(FormattedString s) {
+            return new FormattedString(string + s, size + s.size);
+        }
+
+        public static FormattedString of(String s) {
+            return new FormattedString(s, s.length());
+        }
     }
 
     enum Color {

@@ -48,7 +48,7 @@ public class AsciiTable implements Table {
                     if (i >= row.columns.size()) {
                         continue;
                     }
-                    lengths.compute(i, (k, v) -> max(ofNullable(v).orElse(0), row.columns.get(column).length()));
+                    lengths.compute(i, (k, v) -> max(ofNullable(v).orElse(0), row.columns.get(column).size()));
                 }
             }
 
@@ -81,23 +81,25 @@ public class AsciiTable implements Table {
     }
 
     public class AsciiRow implements Row {
-        private final List<String> columns = new ArrayList<>();
+        private final List<FormattedString> columns = new ArrayList<>();
 
         @Override
         public Row addColumn(Object content) {
             synchronized (AsciiTable.this) {
-                columns.add(content instanceof Double ?  format("%.2f", content) : valueOf(content));
+                String text = content instanceof Double ?  format("%.2f", content) : valueOf(content);
+                columns.add(FormattedString.of(text));
                 return this;
             }
         }
 
         public <T> Row addColumn(Object content, Formatter<T> formatter) {
-            String text;
+            FormattedString text;
             try {
                 text = formatter.format((T) content);
             } catch (Exception e) {
                 e.printStackTrace();
-                text = valueOf(content);
+                String s = valueOf(content);
+                text = FormattedString.of(s);
             }
 
             synchronized (AsciiTable.this) {
@@ -115,5 +117,9 @@ public class AsciiTable implements Table {
         public String render() {
             return AsciiTable.this.render();
         }
+    }
+
+    public static void main(String[] args) {
+        System.out.println(Color.white.code().chars().count());
     }
 }

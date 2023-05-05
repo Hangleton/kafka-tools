@@ -1,6 +1,8 @@
 package io.slow;
 
+import common.table.Table;
 import common.table.Table.Color;
+import common.table.Table.FormattedString;
 import common.table.Table.Formatter;
 import common.table.Table.Row;
 import common.table.Tables;
@@ -216,20 +218,21 @@ public class IoStatisticsConsumer {
 
     private static class IostatsFormatter implements Formatter<IoStatistics> {
         @Override
-        public String format(IoStatistics stats) {
+        public FormattedString format(IoStatistics stats) {
             return stringify(stats.readOpsLatency(), 2)
-                + ":" + stringify(stats.writeOpsLatency(), 2)
-                + ":" + stringify(stats.ioQueueSize(), 2);
+                .concat(FormattedString.of(":"))
+                .concat(stringify(stats.writeOpsLatency(), 2))
+                .concat(stringify(stats.ioQueueSize(), 2));
         }
 
-        private String stringify(double latency, double threshold) {
+        private FormattedString stringify(double latency, double threshold) {
             String color = "";
             if (!Double.isNaN(latency)) {
                 color = latency > threshold ? Color.red.code() : Color.green.code();
             }
 
             String text = Double.isNaN(latency) ? "NaN " : String.format("%.2f", latency);
-            return color + text + Color.reset;
+            return new FormattedString(color + text + Color.reset, text.length());
         }
     }
 
@@ -240,15 +243,15 @@ public class IoStatisticsConsumer {
             .withZone(ZoneId.systemDefault());
 
         @Override
-        public String format(Instant instant) {
-            return formatter.format(instant);
+        public FormattedString format(Instant instant) {
+            return FormattedString.of(formatter.format(instant));
         }
     }
 
     private static class HeaderFormatter implements Formatter<String> {
         @Override
-        public String format(String content) {
-            return Color.blue.code() + content + Color.reset;
+        public FormattedString format(String content) {
+            return new FormattedString(Color.blue.code() + content + Color.reset, content.length());
         }
     }
 }
