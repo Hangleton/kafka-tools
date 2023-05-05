@@ -1,15 +1,13 @@
 package io.slow;
 
-import common.table.Table;
 import common.table.Table.Color;
 import common.table.Table.Formatter;
 import common.table.Table.Row;
 import common.table.Tables;
+import io.stats.serialization.InstantSerde;
+import io.stats.serialization.IoStatisticsSerde;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.*;
-import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.serialization.ByteArrayDeserializer;
-import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.server.IoStatistics;
 import org.apache.kafka.streams.KafkaStreams;
@@ -33,8 +31,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-
-import static java.util.Collections.singletonList;
 
 public class IoStatisticsConsumer {
 
@@ -71,13 +67,16 @@ public class IoStatisticsConsumer {
             streamsBuilder
                 .<Long, byte[]> stream("__io_statistics")
                 .groupBy((key, value) -> Instant.ofEpochMilli(key).truncatedTo(ChronoUnit.SECONDS))
-                .aggregate(() -> new ArrayList<>(),
-                    (Aggregator<Instant, byte[], List<IoStatistics.Snapshot>>) (key, value, aggregate) -> {
-                        aggregate.add((IoStatistics.Snapshot) IoStatistics.fromRecord(value));
+                .aggregate(
+                    () -> new ArrayList<>(),
+                    (key, value, aggregate) -> {
+                        aggregate.add(IoStatistics.fromRecord(value));
                         return aggregate;
-                })
+                        },
+                    Materialized.with(new InstantSerde(), Serdes.ListSerde(ArrayList.class, new IoStatisticsSerde())))
                 .toStream()
                 .foreach(new IostatsPrinter());
+
             KafkaStreams s = new KafkaStreams(streamsBuilder.build(), properties);
             s.start();
 
@@ -159,28 +158,28 @@ public class IoStatisticsConsumer {
             .build();
     }
 
-    private static class IostatsPrinter implements ForeachAction<Instant, List<IoStatistics.Snapshot>> {
+    private static class IostatsPrinter implements ForeachAction<Instant, List<IoStatistics>> {
         private final IostatsFormatter iostatsFormatter = new IostatsFormatter();
         private final TimestampFormatter timestampFormatter = new TimestampFormatter();
-        private final Map<Integer, IoStatistics.Snapshot> lastStats = new HashMap<>();
+        private final Map<Integer, IoStatistics> lastStats = new HashMap<>();
 
         @Override
-        public void apply(Instant timestamp, List<IoStatistics.Snapshot> values) {
+        public void apply(Instant timestamp, List<IoStatistics> values) {
             Collections.sort(values, Comparator.comparing(IoStatistics::brokerId));
             Row row = Tables.newAsciiTable().newRow();
             row.addColumn("Timestamp");
 
             try {
-                for (IoStatistics.Snapshot stats: values) {
+                for (IoStatistics stats: values) {
                     row.addColumn(stats.brokerId());
                 }
 
                 row = row.newRow();
                 row.addColumn(timestamp, timestampFormatter);
 
-                for (IoStatistics.Snapshot stats: values) {
+                for (IoStatistics stats: values) {
                     if (lastStats.containsKey(stats.brokerId())) {
-                        IoStatistics.Snapshot last = lastStats.get(stats.brokerId());
+                        IoStatistics.Snapshot last = (IoStatistics.Snapshot) lastStats.get(stats.brokerId());
                         IoStatistics delta = stats.delta(last);
                         row.addColumn(delta, iostatsFormatter);
                     }
