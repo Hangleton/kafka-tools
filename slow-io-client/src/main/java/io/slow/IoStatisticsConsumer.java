@@ -74,7 +74,8 @@ public class IoStatisticsConsumer {
                     (key, value, aggregate) -> {
                         aggregate.add(value);
                         return aggregate;
-                    }
+                    },
+                    Materialized.with(new InstantSerde(), Serdes.ListSerde(ArrayList.class, new IoStatisticsSerde()))
                 )
                 .toStream()
                 .foreach(new IostatsPrinter());
