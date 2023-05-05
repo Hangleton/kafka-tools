@@ -184,7 +184,7 @@ public class IoStatisticsConsumer {
             Row row = Tables.newAsciiTable().newRow();
 
             if (it == 0) {
-                row.newRow().addColumn("Timestamp", headerFormatter);
+                row = row.newRow().addColumn("Timestamp", headerFormatter);
                 for (IoStatistics stats: values) {
                     row.addColumn("Broker " + stats.brokerId(), headerFormatter);
                 }
@@ -248,7 +248,7 @@ public class IoStatisticsConsumer {
     private static class HeaderFormatter implements Formatter<String> {
         @Override
         public String format(String content) {
-            return Color.whiteBright.code() + content + Color.reset;
+            return Color.blue.code() + content + Color.reset;
         }
     }
 }
