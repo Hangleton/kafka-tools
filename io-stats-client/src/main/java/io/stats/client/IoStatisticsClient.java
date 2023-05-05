@@ -63,13 +63,10 @@ public class IoStatisticsClient {
                 .toStream()
                 .foreach(new IostatsDeltaGenerator(singletonList(new IoStatisticsPrinter())));
 
-            KafkaStreams s = new KafkaStreams(streamsBuilder.build(), properties);
-            s.cleanUp();
-            s.start();
-
-            System.in.read();
-
-            s.close();
+            try (KafkaStreams s = new KafkaStreams(streamsBuilder.build(), properties)) {
+                s.start();
+                System.in.read();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
