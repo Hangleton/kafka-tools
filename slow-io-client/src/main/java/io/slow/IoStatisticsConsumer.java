@@ -78,7 +78,7 @@ public class IoStatisticsConsumer {
                     )
                 )
                 .groupBy((key, value) -> key.truncatedTo(ChronoUnit.SECONDS))
-                .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofSeconds(2)))
+                .windowedBy(TimeWindows.ofSizeAndGrace(Duration.ofSeconds(2), Duration.ofSeconds(2)))
                 .aggregate(
                     () -> new ArrayList<>(),
                     (key, value, aggregate) -> {
