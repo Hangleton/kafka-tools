@@ -78,7 +78,7 @@ public class IoStatisticsConsumer {
                     )
                 )
                 .groupBy((key, value) -> key.truncatedTo(ChronoUnit.SECONDS))
-                .windowedBy(TimeWindows.ofSizeAndGrace(Duration.ofSeconds(2), Duration.ofSeconds(2)))
+                .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofSeconds(2)))
                 .aggregate(
                     () -> new ArrayList<>(),
                     (key, value, aggregate) -> {
@@ -175,12 +175,23 @@ public class IoStatisticsConsumer {
     private static class IostatsPrinter implements ForeachAction<Windowed<Instant>, List<IoStatistics>> {
         private final IostatsFormatter iostatsFormatter = new IostatsFormatter();
         private final TimestampFormatter timestampFormatter = new TimestampFormatter();
+        private final HeaderFormatter headerFormatter = new HeaderFormatter();
         private final Map<Integer, IoStatistics> lastStats = new HashMap<>();
+        private int it = 0;
 
         @Override
         public void apply(Windowed<Instant> window, List<IoStatistics> values) {
             Collections.sort(values, Comparator.comparing(IoStatistics::brokerId));
             Row row = Tables.newAsciiTable().newRow();
+
+            if (it == 0) {
+                row.addColumn("Timestamp", headerFormatter);
+                for (IoStatistics stats: values) {
+                    row.addColumn("Broker " + stats.brokerId());
+                }
+
+                row = row.newRow();
+            }
 
             try {
                 row.addColumn(window.key(), timestampFormatter);
@@ -196,6 +207,7 @@ public class IoStatisticsConsumer {
                 }
 
                 System.out.print(row.render());
+                it = ++it % 30;
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -231,6 +243,13 @@ public class IoStatisticsConsumer {
         @Override
         public String format(Instant instant) {
             return formatter.format(instant);
+        }
+    }
+
+    private static class HeaderFormatter implements Formatter<String> {
+        @Override
+        public String format(String content) {
+            return Color.whiteBold + content + Color.reset;
         }
     }
 }
