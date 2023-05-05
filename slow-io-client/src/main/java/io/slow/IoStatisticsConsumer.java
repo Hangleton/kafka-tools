@@ -40,8 +40,8 @@ public class IoStatisticsConsumer {
 
         Properties properties = new Properties();
         properties.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, args[0]);
-        properties.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.LongSerde.class.getName());
-        properties.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.ByteArraySerde.class.getName());
+        properties.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, InstantSerde.class.getName());
+        properties.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, IoStatisticsSerde.class.getName());
         properties.put(StreamsConfig.APPLICATION_ID_CONFIG, "phoque");
 
         try {
