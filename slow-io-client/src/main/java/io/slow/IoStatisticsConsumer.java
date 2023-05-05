@@ -13,7 +13,9 @@ import org.apache.kafka.server.IoStatistics;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.processor.TimestampExtractor;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.retry.RetryPolicy;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
@@ -67,7 +69,13 @@ public class IoStatisticsConsumer {
             streamsBuilder
                 .stream(
                     "__io_statistics",
-                    Consumed.with(new InstantSerde(), new IoStatisticsSerde()))
+                    Consumed.with(
+                        new InstantSerde(),
+                        new IoStatisticsSerde(),
+                        (record, partitionTime) -> ((Instant) record.key()).toEpochMilli(),
+                        Topology.AutoOffsetReset.LATEST
+                    )
+                )
                 .groupBy((key, value) -> key.truncatedTo(ChronoUnit.SECONDS))
                 .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofSeconds(2)))
                 .aggregate(
