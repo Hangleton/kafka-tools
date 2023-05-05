@@ -216,12 +216,13 @@ public class IoStatisticsConsumer {
         }
     }
 
-    private static class IostatsFormatter implements Formatter<IoStatistics> {
+    public static class IostatsFormatter implements Formatter<IoStatistics> {
         @Override
         public FormattedString format(IoStatistics stats) {
             return stringify(stats.readOpsLatency(), 2)
                 .concat(FormattedString.of(":"))
                 .concat(stringify(stats.writeOpsLatency(), 2))
+                .concat(FormattedString.of(":"))
                 .concat(stringify(stats.ioQueueSize(), 2));
         }
 
@@ -236,7 +237,7 @@ public class IoStatisticsConsumer {
         }
     }
 
-    private static class TimestampFormatter implements Formatter<Instant> {
+    public static class TimestampFormatter implements Formatter<Instant> {
         private static DateTimeFormatter formatter = DateTimeFormatter
             .ofPattern("YYYY-MM-dd HH:mm:ss")
             .withLocale(Locale.getDefault())
@@ -248,7 +249,7 @@ public class IoStatisticsConsumer {
         }
     }
 
-    private static class HeaderFormatter implements Formatter<String> {
+    public static class HeaderFormatter implements Formatter<String> {
         @Override
         public FormattedString format(String content) {
             return new FormattedString(Color.blue.code() + content + Color.reset, content.length());

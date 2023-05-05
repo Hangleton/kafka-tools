@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 import static java.lang.Math.max;
 import static java.lang.String.format;
@@ -58,9 +57,6 @@ public class AsciiTable implements Table {
                 sb.append(title);
             }
 
-            Map<Integer, String> formats =
-                    lengths.entrySet().stream().collect(toMap(e -> e.getKey(), e -> format("%%%ds | ", e.getValue())));
-
             for (AsciiRow row: rows) {
                 sb.append("   | ");
 
@@ -69,7 +65,8 @@ public class AsciiTable implements Table {
                         continue;
                     }
 
-                    sb.append(format(formats.get(i), row.columns.get(i)));
+                    String tabulated = format("%%%ds | ", lengths.get(i) + row.columns.get(i).escapedSize());
+                    sb.append(format(tabulated, row.columns.get(i)));
                 }
 
                 sb.append("\n");
@@ -117,9 +114,5 @@ public class AsciiTable implements Table {
         public String render() {
             return AsciiTable.this.render();
         }
-    }
-
-    public static void main(String[] args) {
-        System.out.println(Color.white.code().chars().count());
     }
 }

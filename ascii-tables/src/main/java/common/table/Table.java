@@ -43,6 +43,10 @@ public interface Table {
             return size;
         }
 
+        public int escapedSize() {
+            return string.length() - size;
+        }
+
         public FormattedString concat(FormattedString s) {
             return new FormattedString(string + s, size + s.size);
         }
