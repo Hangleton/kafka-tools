@@ -238,7 +238,7 @@ public class IoStatisticsConsumer {
                 color = latency > threshold ? Color.red.code() : Color.green.code();
             }
 
-            String text = Double.isNaN(latency) ? "NaN " : String.format("%.3f", latency);
+            String text = Double.isNaN(latency) ? " NaN " : String.format("%.3f", latency);
             return new FormattedString(color + text + Color.reset, text.length());
         }
     }
