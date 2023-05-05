@@ -22,8 +22,6 @@ public class IoStatisticsSerde implements Serde<IoStatistics> {
         return deserializer;
     }
 
-
-
     private static Serializer<IoStatistics> serializer = (topic, data) -> {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
