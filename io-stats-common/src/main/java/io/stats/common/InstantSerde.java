@@ -1,4 +1,4 @@
-package io.stats.serialization;
+package io.stats.common;
 
 import org.apache.kafka.common.serialization.*;
 
@@ -18,11 +18,9 @@ public class InstantSerde implements Serde<Instant> {
         return deserializer;
     }
 
-    private final Serializer<Instant> serializer = (topic, data) -> {
-        return innerSerializer.serialize(topic, data.toEpochMilli());
-    };
+    private final Serializer<Instant> serializer = (topic, data) ->
+        innerSerializer.serialize(topic, data.toEpochMilli());
 
-    private final Deserializer<Instant> deserializer = (topic, data) -> {
-        return Instant.ofEpochMilli(innerDeserializer.deserialize(topic, data));
-    };
+    private final Deserializer<Instant> deserializer = (topic, data) ->
+        Instant.ofEpochMilli(innerDeserializer.deserialize(topic, data));
 }

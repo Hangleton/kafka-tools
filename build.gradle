@@ -25,7 +25,16 @@ project('kafka-broker-reg') {
     }
 }
 
-project('slow-io-client') {
+project('ascii-tables') {
+}
+
+project('io-stats-common') {
+    dependencies {
+        implementation group: 'org.apache.kafka', name: 'kafka-clients', version: '3.4.0'
+    }
+}
+
+project('io-stats-client') {
     dependencies {
         implementation group: 'org.apache.kafka', name: 'kafka-clients', version: '3.4.0'
         implementation group: 'org.apache.kafka', name: 'kafka-streams', version: '3.4.0'
@@ -38,12 +47,15 @@ project('slow-io-client') {
         implementation 'software.amazon.awssdk:apache-client:2.20.26'
 
         implementation project(':ascii-tables')
+        implementation project(':io-stats-common')
     }
 
-    mainClassName = "io.slow.IoStatisticsConsumer"
+    mainClassName = "io.stats.client.IoStatisticsClient"
 
     jar {
         dependsOn(':ascii-tables:jar')
+        dependsOn(':io-stats-common:jar')
+
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
         manifest {
@@ -54,10 +66,6 @@ project('slow-io-client') {
             configurations.getByName("runtimeClasspath").collect { it.isDirectory() ? it : zipTree(it) }
         }
     }
-}
-
-project('ascii-tables') {
-
 }
 
 dependencies {

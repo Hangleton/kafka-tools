@@ -1,5 +1,7 @@
-include 'kafka-broker-reg'
-include 'slow-io-client'
 include 'ascii-tables'
+include 'io-stats-common'
+include 'io-stats-client'
+
+include 'kafka-broker-reg'
 
 rootProject.name = 'kafka-tools'

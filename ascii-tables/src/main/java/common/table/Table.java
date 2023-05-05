@@ -25,7 +25,7 @@ public interface Table {
         FormattedString format(T content);
     }
 
-    public static final class FormattedString {
+    final class FormattedString {
         private final String string;
         private final int size;
 
