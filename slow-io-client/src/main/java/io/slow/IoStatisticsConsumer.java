@@ -65,15 +65,17 @@ public class IoStatisticsConsumer {
 
             StreamsBuilder streamsBuilder = new StreamsBuilder();
             streamsBuilder
-                .<Long, byte[]> stream("__io_statistics")
-                .groupBy((key, value) -> Instant.ofEpochMilli(key).truncatedTo(ChronoUnit.SECONDS))
+                .stream(
+                    "__io_statistics",
+                    Consumed.with(new InstantSerde(), new IoStatisticsSerde()))
+                .groupBy((key, value) -> key.truncatedTo(ChronoUnit.SECONDS))
                 .aggregate(
-                    () -> new ArrayList<>(),
+                    () -> new ArrayList<IoStatistics>(),
                     (key, value, aggregate) -> {
-                        aggregate.add(IoStatistics.fromRecord(value));
+                        aggregate.add(value);
                         return aggregate;
-                        },
-                    Materialized.with(new InstantSerde(), Serdes.ListSerde(ArrayList.class, new IoStatisticsSerde())))
+                    }
+                )
                 .toStream()
                 .foreach(new IostatsPrinter());
 
