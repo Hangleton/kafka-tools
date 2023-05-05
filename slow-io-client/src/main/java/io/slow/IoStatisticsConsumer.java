@@ -197,14 +197,20 @@ public class IoStatisticsConsumer {
             try {
                 row.addColumn(window.key(), timestampFormatter);
 
+                Map<Integer, IoStatistics> deltas = new TreeMap<>();
+
                 for (IoStatistics stats: values) {
                     if (lastStats.containsKey(stats.brokerId())) {
                         IoStatistics.Snapshot last = (IoStatistics.Snapshot) lastStats.get(stats.brokerId());
                         IoStatistics delta = stats.delta(last);
-                        row.addColumn(delta, iostatsFormatter);
+                        deltas.put(stats.brokerId(), delta);
                     }
 
                     lastStats.put(stats.brokerId(), stats);
+                }
+
+                for (IoStatistics delta: deltas.values()) {
+                    row.addColumn(delta, iostatsFormatter);
                 }
 
                 System.out.print(row.render());
