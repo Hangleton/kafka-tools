@@ -69,6 +69,7 @@ public class IoStatisticsConsumer {
                     "__io_statistics",
                     Consumed.with(new InstantSerde(), new IoStatisticsSerde()))
                 .groupBy((key, value) -> key.truncatedTo(ChronoUnit.SECONDS))
+                .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofSeconds(2)))
                 .aggregate(
                     () -> new ArrayList<>(),
                     (key, value, aggregate) -> {
@@ -161,19 +162,18 @@ public class IoStatisticsConsumer {
             .build();
     }
 
-    private static class IostatsPrinter implements ForeachAction<Instant, List<IoStatistics>> {
+    private static class IostatsPrinter implements ForeachAction<Windowed<Instant>, List<IoStatistics>> {
         private final IostatsFormatter iostatsFormatter = new IostatsFormatter();
         private final TimestampFormatter timestampFormatter = new TimestampFormatter();
         private final Map<Integer, IoStatistics> lastStats = new HashMap<>();
 
         @Override
-        public void apply(Instant timestamp, List<IoStatistics> values) {
+        public void apply(Windowed<Instant> window, List<IoStatistics> values) {
             Collections.sort(values, Comparator.comparing(IoStatistics::brokerId));
             Row row = Tables.newAsciiTable().newRow();
 
             try {
-                row = row.newRow();
-                row.addColumn(timestamp, timestampFormatter);
+                row.addColumn(window.key(), timestampFormatter);
 
                 for (IoStatistics stats: values) {
                     if (lastStats.containsKey(stats.brokerId())) {
