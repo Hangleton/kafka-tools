@@ -1,6 +1,5 @@
 package io.slow;
 
-import common.table.Table;
 import common.table.Table.Color;
 import common.table.Table.FormattedString;
 import common.table.Table.Formatter;
@@ -197,7 +196,7 @@ public class IoStatisticsConsumer {
             try {
                 row.addColumn(window.key(), timestampFormatter);
 
-                Map<Integer, IoStatistics> deltas = new TreeMap<>();
+                NavigableMap<Integer, IoStatistics> deltas = new TreeMap<>();
 
                 for (IoStatistics stats: values) {
                     if (lastStats.containsKey(stats.brokerId())) {
@@ -207,6 +206,10 @@ public class IoStatisticsConsumer {
                     }
 
                     lastStats.put(stats.brokerId(), stats);
+                }
+
+                for (int i = 0; i < deltas.firstKey() - 1; ++i) {
+                    row.addColumn("");
                 }
 
                 for (IoStatistics delta: deltas.values()) {
