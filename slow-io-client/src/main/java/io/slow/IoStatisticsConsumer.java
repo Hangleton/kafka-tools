@@ -70,7 +70,7 @@ public class IoStatisticsConsumer {
                     Consumed.with(new InstantSerde(), new IoStatisticsSerde()))
                 .groupBy((key, value) -> key.truncatedTo(ChronoUnit.SECONDS))
                 .aggregate(
-                    () -> new ArrayList<IoStatistics>(),
+                    () -> new ArrayList<>(),
                     (key, value, aggregate) -> {
                         aggregate.add(value);
                         return aggregate;
@@ -170,13 +170,8 @@ public class IoStatisticsConsumer {
         public void apply(Instant timestamp, List<IoStatistics> values) {
             Collections.sort(values, Comparator.comparing(IoStatistics::brokerId));
             Row row = Tables.newAsciiTable().newRow();
-            row.addColumn("Timestamp");
 
             try {
-                for (IoStatistics stats: values) {
-                    row.addColumn(stats.brokerId());
-                }
-
                 row = row.newRow();
                 row.addColumn(timestamp, timestampFormatter);
 
