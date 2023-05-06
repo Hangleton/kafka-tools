@@ -1,10 +1,3 @@
-include 'ascii-tables'
-include 'kafka-storage-api'
-
-include 'io-stats-common'
-include 'io-stats-client'
-include 'io-stats-plugin'
-
 include 'kafka-broker-reg'
 
 rootProject.name = 'kafka-tools'
